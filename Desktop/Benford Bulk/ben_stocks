@@ -1,0 +1,39 @@
+import pandas as pd
+import numpy as np
+import urllib2
+from bs4 import BeautifulSoup, Comment
+import re
+import os
+import dill
+
+files=os.listdir('/Users/briangoldman/Desktop/NYSE Docs/')
+files1=[f for f in files if f[0]!='.']
+abbrev=[]
+c=-1
+
+for f in files1:
+    abb=re.findall("[A-Z]+",f)
+    if c>-1:
+        if abbrev[c]!=abb[0]:
+            abbrev.append(abb[0])
+            c+=1
+    else:
+        abbrev.append(abb[0])
+        c+=1
+
+abbyear=[a+t for t in ["10.txt","11.txt","12.txt","13.txt","14.txt","15.txt"] for a in abbrev]
+in_dict={l:0 for l in abbyear}
+c=0
+for f in files1:
+    in_dict[f]=1
+
+for a in abbrev:
+    try:
+        if in_dict[a+"12.txt"]==1 and in_dict[a+"13.txt"]==1 and in_dict[a+"14.txt"]==1:
+            with open('/Users/briangoldman/Desktop/NYSE Stocks/'+a+'.txt','rb') as f:
+                sh=dill.load(f)
+            print c
+            c+=1
+    except:
+        print "oops!"
+        c+=1

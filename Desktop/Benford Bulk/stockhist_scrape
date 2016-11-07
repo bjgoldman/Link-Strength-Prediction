@@ -1,0 +1,34 @@
+import pandas as pd
+import numpy as np
+import urllib2
+from bs4 import BeautifulSoup, Comment
+import re
+import os
+import dill
+import Quandl
+
+files=os.listdir('/Users/briangoldman/Desktop/NYSE Docs/')
+files1=[f for f in files if f[0]!='.']
+abbrev=[]
+c=-1
+
+for f in files1:
+    abb=re.findall("[A-Z]+",f)
+    if c>-1:
+        if abbrev[c]!=abb[0]:
+            abbrev.append(abb[0])
+            c+=1
+    else:
+        abbrev.append(abb[0])
+        c+=1
+c=0
+failed=[]
+for i in range(0,1):
+    try:
+        stock_hist=Quandl.get("YAHOO/"+abbrev[i], authtoken="xEQ3yfo2s8iamJVwh9Z9")
+        with open('/Users/briangoldman/Desktop/NYSE Stocks/'+abbrev[i]+'.txt','wb') as f:
+            dill.dump(stock_hist,f)
+        print i
+    except:
+        failed.append(abbrev[i])
+        print -i

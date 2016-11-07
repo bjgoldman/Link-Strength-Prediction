@@ -1,0 +1,48 @@
+import pandas as pd
+import numpy as np
+import urllib2
+from bs4 import BeautifulSoup, Comment
+import re
+
+failed=[]
+fn=0
+
+df=pd.read_csv("/Users/briangoldman/Downloads/companylist.csv")
+names=df["Symbol"].as_matrix()
+'''
+companylist is a database containing information on every stock listed on the NYSE.
+names is a list of stock ticker symbols for each stock on the NYSE.
+valuespreadsheet.com has a page for each stock with links to SEC reports.  We open it using urllib2.urlopen(). soup is the source html behind that page, and is broken up into blocks.  To view the html, allow developer tools in your browser, then right click part of the page and choose Inspect Element.  In this page’s html, the links for the SEC report are in the first table after the h2 block with text field Annual.
+
+aurl is a table of html blocks corresponding to links in that table.  aurl[i]['href'] is the address of a particular link.  This link doesn’t lead to the report itself, but rather to a page with links to the report and several auxiliary documents.  So again we’ll parse the html for the link we want and open it using raw_page = urllib2.urlopen("http://www.sec.gov"+furl['href']).read().
+'''
+
+
+for name in names:
+    try:
+        url="https://www.valuespreadsheet.com/iedgar/results.php?stock="+name+"&output=html"
+        raw_page = urllib2.urlopen(url).read()
+        soup = BeautifulSoup(raw_page)
+        parent_div = soup.find('h2', text='Annual')
+        atable=parent_div.find_next('table')
+        aurl=atable.find_all('a',text='Page')
+        for i in range(min(len(aurl),5)):
+            raw_page1 = urllib2.urlopen(aurl[i]['href']).read()
+            year=re.findall("\-([0-9][0-9])\-",aurl[i]['href'])
+            soup1 = BeautifulSoup(raw_page1)
+            parent_div1 = soup1.find('table', attrs={'class':'tableFile', 'summary':'Document Format Files'})
+            furl=parent_div1.find_next('a')
+            raw_page = urllib2.urlopen("http://www.sec.gov"+furl['href']).read()
+            soup = BeautifulSoup(raw_page)
+            comments = soup.findAll(text=lambda text:isinstance(text, Comment))
+            [comment.extract() for comment in comments]
+            texts=soup.findAll(text=True)
+            text=' '.join(texts)
+            text0=re.sub(r'[^\x00-\x7F]+',' ', text)
+            with open('/Users/briangoldman/Desktop/NYSE Docs/'+name+str(year[0])+'.txt','wb') as f:
+                f.write(text0)
+    except:
+        failed.append(name)
+        fn+=1
+        print fn
+        

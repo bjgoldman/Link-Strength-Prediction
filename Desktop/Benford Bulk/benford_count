@@ -1,0 +1,39 @@
+import pandas as pd
+import numpy as np
+import urllib2
+from bs4 import BeautifulSoup, Comment
+import re
+import os
+"""
+files=os.listdir('/Users/briangoldman/Desktop/NYSE Docs/')
+files1=[f for f in files if f[0]!='.']
+"""
+dist_dict={}
+count_dict={}
+
+files1=[0]
+for fil in files1:
+    with open('/Users/briangoldman/Desktop/lmb.txt','rb') as f:
+        pretext=f.read()
+
+    text0=re.sub("[^\w\s]", "", pretext)
+    text=re.sub("\n", " ", text0)
+    text1=re.sub(" 20[0-2]\d ", " ", text)
+    text15=re.sub(" 19[7-9]\d ", " ", text1)
+    months="January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec"
+    text2=re.sub(" (?:"+months+")\s*\d+ ", " ", text15)
+    start=0
+    counts=[0]*9
+
+    for i in range(1,10):
+        counts[i-1]=len(re.findall(" "+str(i),text2))
+    
+    for i in range(1,1000):
+        try:
+            start=text2.index('    '+str(i)+'    ',start)
+            counts[int(float(str(i)[0]))-1]-=1
+        except:
+            break
+
+    dist_dict[fil]=[float(c)/sum(counts) for c in counts]
+    count_dict[fil]=sum(counts)
